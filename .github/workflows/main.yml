@@ -1,0 +1,34 @@
+name: Sync Upstream
+
+on:
+  schedule:
+    - cron: '0 0 * * *' # 每天国际标准时间 0:00（北京时间早上 8:00）自动运行
+  workflow_dispatch: # 允许你在 GitHub 页面上手动点按钮触发同步
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Target Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync Upstream
+        run: |
+          # 1. 配置 Git 用户信息
+          git config --global user.name 'github-actions[bot]'
+          git config --global user.email 'github-actions[bot]@users.noreply.github.com'
+          
+          # 2. 添加源项目作为上游仓库 (Upstream)
+          git remote add upstream https://github.com/xai-org/grok-build.git
+          git fetch upstream
+          
+          # 3. 切换到你的主分支（根据实际情况可能是 main 或 master）
+          git checkout main
+          
+          # 4. 合并源项目的更新。如果不想因为冲突卡住，可以用 --no-edit
+          git merge upstream/main --allow-unrelated-histories -m "chore: sync with upstream"
+          
+          # 5. 推送到你自己的仓库
+          git push origin main
